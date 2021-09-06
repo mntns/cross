@@ -6,16 +6,16 @@ set -euo pipefail
 main() {
     # arch in the rust target
     local arch="${1}" \
-          kversion=4.19.0-17
+          kversion=5.10.0-8
 
-    local debsource="deb http://http.debian.net/debian/ buster main"
-    debsource="${debsource}\ndeb http://security.debian.org/ buster/updates main"
+    local debsource="deb http://http.debian.net/debian/ bullseye main"
+    debsource="${debsource}\ndeb http://security.debian.org/ bullseye-security main"
 
     local dropbear="dropbear-bin"
 
     local -a deps
     local kernel=
-    local libgcc="libgcc1"
+    local libgcc="libgcc-s1"
 
     # select debian arch and kernel version
     case "${arch}" in
@@ -31,7 +31,14 @@ main() {
             arch=i386
             kernel="${kversion}-686"
             ;;
-        mips|mipsel)
+        mips)
+            # mips was discontinued in bullseye, so we have to use buster.
+            libgcc="libgcc1"
+            debsource="deb http://http.debian.net/debian/ buster main"
+            debsource="${debsource}\ndeb http://security.debian.org/ buster/updates main"
+            kernel=4.19.0-14-4kc-malta
+            ;;
+        mipsel)
             kernel="${kversion}-4kc-malta"
             ;;
         mips64el)
@@ -59,8 +66,8 @@ main() {
             arch=ppc64
             # https://packages.debian.org/en/sid/linux-image-powerpc64
             kversion='5.*'
-            kernel="${kversion}-powerpc64"
             libgcc="libgcc-s1"
+            kernel='*-powerpc64'
             debsource="deb http://ftp.ports.debian.org/debian-ports unstable main"
             debsource="${debsource}\ndeb http://ftp.ports.debian.org/debian-ports unreleased main"
             # sid version of dropbear requires these dependencies
@@ -78,7 +85,6 @@ main() {
             # there is no stable port
             # https://packages.debian.org/en/sid/linux-image-sparc64
             kernel='*-sparc64'
-            libgcc="libgcc-s1"
             debsource="deb http://ftp.ports.debian.org/debian-ports unstable main"
             debsource="${debsource}\ndeb http://ftp.ports.debian.org/debian-ports unreleased main"
             # sid version of dropbear requires these dependencies
